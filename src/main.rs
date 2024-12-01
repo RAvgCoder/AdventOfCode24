@@ -1,7 +1,7 @@
 use crate::utils::day_setup::Utils;
 
-mod utils;
 mod day1;
+mod utils;
 
 fn main() {
     // Utils::new_day(1);
