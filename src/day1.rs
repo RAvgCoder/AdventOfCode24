@@ -55,12 +55,9 @@ fn part2(input: Vec<String>) -> u32 {
     }
 
     for e in list2 {
-        tally_map
-            .entry(e)
-            .and_modify(|(_, count)| {
-                *count += 1;
-            })
-            .or_insert((0, 1));
+        tally_map.entry(e).and_modify(|(_, count)| {
+            *count += 1;
+        });
     }
 
     tally_map
