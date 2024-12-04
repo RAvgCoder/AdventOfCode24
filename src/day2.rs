@@ -18,9 +18,7 @@ fn part1(input: Report) -> usize {
     input
         .levels
         .into_iter()
-        .filter(|nums| {
-            Report::is_level_ok(&nums)
-        })
+        .filter(|nums| Report::is_level_ok(&nums))
         .count()
 }
 
@@ -34,13 +32,11 @@ fn part2(input: Report) -> usize {
                 return true;
             }
             // Otherwise, check by removing one level at a time
-            nums.iter()
-                .enumerate()
-                .any(|(i, _)| {
-                    let mut temp = nums.clone();
-                    temp.remove(i);
-                    Report::is_level_ok(&temp)
-                })
+            nums.iter().enumerate().any(|(i, _)| {
+                let mut temp = nums.clone();
+                temp.remove(i);
+                Report::is_level_ok(&temp)
+            })
         })
         .count()
 }
@@ -50,27 +46,25 @@ struct Report {
 }
 
 impl Report {
-    pub fn is_level_ok(level: &[u8]) -> bool {
+    fn is_level_ok(level: &[u8]) -> bool {
         let mut ordering = level[1].cmp(&level[0]);
         if !(1..=3).contains(&level[1].abs_diff(level[0])) {
             return false;
         }
-        level[1..]
-            .windows(2)
-            .all(|window| match window {
-                [a, b] => match (ordering, b.cmp(a)) {
-                    (Ordering::Greater, Ordering::Greater) => {
-                        ordering = Ordering::Greater;
-                        (1..=3).contains(&(b - a))
-                    }
-                    (Ordering::Less, Ordering::Less) => {
-                        ordering = Ordering::Less;
-                        (1..=3).contains(&(a - b))
-                    }
-                    _ => false,
-                },
-                _ => unreachable!(),
-            })
+        level[1..].windows(2).all(|window| match window {
+            [a, b] => match (ordering, b.cmp(a)) {
+                (Ordering::Greater, Ordering::Greater) => {
+                    ordering = Ordering::Greater;
+                    (1..=3).contains(&(b - a))
+                }
+                (Ordering::Less, Ordering::Less) => {
+                    ordering = Ordering::Less;
+                    (1..=3).contains(&(a - b))
+                }
+                _ => false,
+            },
+            _ => unreachable!(),
+        })
     }
 }
 
