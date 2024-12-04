@@ -9,41 +9,17 @@ use std::cmp::Ordering;
 /// # Panics
 ///   If the result of any part does not match the expected value.
 pub fn run() {
-    // 712 Too high
-    // Low
-    // 586
-    // 591
     // run_part(day_func_part_to_run, part_num, day_num)
     Utils::run_part_single(part1, 1, 2, Some(572));
-    Utils::run_part_single(part2, 2, 0, None);
+    Utils::run_part_single(part2, 2, 2, Some(612));
 }
 
 fn part1(input: Report) -> usize {
     input
         .levels
         .into_iter()
-        .filter_map(|nums| {
-            let mut ordering = nums[1].cmp(&nums[0]);
-            if !(1..=3).contains(&nums[1].abs_diff(nums[0])) {
-                return None;
-            }
-            nums[1..]
-                .windows(2)
-                .all(|window| match window {
-                    [a, b] => match (ordering, b.cmp(a)) {
-                        (Ordering::Greater, Ordering::Greater) => {
-                            ordering = Ordering::Greater;
-                            (1..=3).contains(&(b - a))
-                        }
-                        (Ordering::Less, Ordering::Less) => {
-                            ordering = Ordering::Less;
-                            (1..=3).contains(&(a - b))
-                        }
-                        _ => false,
-                    },
-                    _ => unreachable!(),
-                })
-                .then(|| ())
+        .filter(|nums| {
+            Report::is_level_ok(&nums)
         })
         .count()
 }
@@ -52,104 +28,50 @@ fn part2(input: Report) -> usize {
     input
         .levels
         .into_iter()
-        .filter_map(|nums| {
-            let mut decr_stack: Vec<u8> = vec![];
-            let mut decr_pop = 0;
-            let mut d_push = 0;
-            for e in nums.iter().rev() {
-                match decr_stack.last() {
-                    Some(last) => {
-                        match (last.cmp(e), (1..=3).contains(&(*last as i32 - *e as i32))) {
-                            (Ordering::Greater, true) => {
-                                d_push += 1;
-                                decr_stack.push(*e);
-                            }
-                            (Ordering::Equal, _) => {
-                                decr_pop += 1;
-                                // d_push += 1;
-                                // decr_stack.push(*e);
-                            }
-                            _ => {
-                                decr_pop += 1;
-                                decr_stack.pop();
-                            }
-                        }
-                        //
-                        // if *last > *e && (1..=3).contains(&(last - e)) {
-                        //     d_push += 1;
-                        //     decr_stack.push(*e);
-                        // } else {
-                        //     decr_pop += 1;
-                        //     decr_stack.pop();
-                        // }
-                    }
-                    // Base case empty
-                    None => {
-                        d_push += 1;
-                        decr_stack.push(*e);
-                    }
-                }
-                println!("decrC: {:?}, decrS: {:?}", (decr_pop, d_push), decr_stack);
+        .filter(|nums| {
+            // Check if the report is valid as-is
+            if Report::is_level_ok(nums) {
+                return true;
             }
-
-            // println!("-----------------------");
-            let mut i_push = 0;
-            let mut incr_stack = vec![];
-            let mut incr_pop = 0;
-            for e in nums.clone().into_iter().rev() {
-                match incr_stack.last() {
-                    Some(last) => {
-                        match (e.cmp(last), (1..=3).contains(&(e as i32 - *last as i32))) {
-                            (Ordering::Greater, true) => {
-                                i_push += 1;
-                                incr_stack.push(e);
-                            }
-                            (Ordering::Equal, _) => {
-                                incr_pop += 1;
-                                // i_push += 1;
-                                // incr_stack.push(e);
-                            }
-                            _ => {
-                                incr_pop += 1;
-                                incr_stack.pop();
-                            }
-                        }
-                        //
-                        // if *last < e && (1..=3).contains(&(e - last)) {
-                        //     i_push += 1;
-                        //     incr_stack.push(e);
-                        // } else {
-                        //     incr_pop += 1;
-                        //     incr_stack.pop();
-                        // }
-                    }
-                    None => {
-                        i_push += 1;
-                        incr_stack.push(e);
-                    }
-                }
-                println!("incrC: {:?}, incrS: {:?}", (incr_pop, i_push), incr_stack);
-            }
-
-            print!(
-                "incr: ({:?}, {}), decr: ({:?}, {})",
-                incr_pop, i_push, decr_pop, d_push
-            );
-            if incr_pop <= 1 || decr_pop <= 1 {
-                println!(" GOOD\t| {:?}", nums.clone());
-                println!("-----------------------");
-                Some(())
-            } else {
-                println!(" BAD\t| {:?}", nums.clone());
-                println!("-----------------------");
-                None
-            }
+            // Otherwise, check by removing one level at a time
+            nums.iter()
+                .enumerate()
+                .any(|(i, _)| {
+                    let mut temp = nums.clone();
+                    temp.remove(i);
+                    Report::is_level_ok(&temp)
+                })
         })
         .count()
 }
 
 struct Report {
     levels: Vec<Vec<u8>>,
+}
+
+impl Report {
+    pub fn is_level_ok(level: &[u8]) -> bool {
+        let mut ordering = level[1].cmp(&level[0]);
+        if !(1..=3).contains(&level[1].abs_diff(level[0])) {
+            return false;
+        }
+        level[1..]
+            .windows(2)
+            .all(|window| match window {
+                [a, b] => match (ordering, b.cmp(a)) {
+                    (Ordering::Greater, Ordering::Greater) => {
+                        ordering = Ordering::Greater;
+                        (1..=3).contains(&(b - a))
+                    }
+                    (Ordering::Less, Ordering::Less) => {
+                        ordering = Ordering::Less;
+                        (1..=3).contains(&(a - b))
+                    }
+                    _ => false,
+                },
+                _ => unreachable!(),
+            })
+    }
 }
 
 impl From<Vec<String>> for Report {

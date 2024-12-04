@@ -7,9 +7,11 @@ mod utils;
 
 fn main() {
     // Utils::new_day(3);
-    let days = [day1::run, 
+    let days = [
+        day1::run, 
+        day3::run,
         day2::run,
-        day3::run];
+    ];
 
     days.last().unwrap()();
 }
