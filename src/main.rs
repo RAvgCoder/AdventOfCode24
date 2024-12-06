@@ -15,8 +15,8 @@ fn main() {
         day2::run,
         day3::run,
         day4::run,
-        day6::run,
         day5::run,
+        day6::run,
     ];
 
     days.last().unwrap()();
