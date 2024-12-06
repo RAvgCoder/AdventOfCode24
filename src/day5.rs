@@ -10,7 +10,7 @@ use std::collections::{HashMap, HashSet};
 ///   If the result of any part does not match the expected value.
 pub fn run() {
     // run_part(day_func_part_to_run, part_num, day_num)
-    Utils::run_part_single(part1, 1, 0, None);
+    Utils::run_part_single(part1, 1, 0, Some(5091));
     Utils::run_part_single(part2, 2, 0, None);
 }
 
