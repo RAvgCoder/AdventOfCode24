@@ -1,0 +1,3 @@
+[submodule "Aoc_Rust_Utils"]
+	path = Aoc_Rust_Utils
+	url = https://github.com/RAvgCoder/Aoc_Rust_Utils.git

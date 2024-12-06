@@ -1,4 +1,4 @@
-use crate::utils::day_setup::Utils;
+use aoc_utils_rust::day_setup::Utils;
 use std::collections::HashMap;
 
 /// Runs the Advent of Code puzzles for [Current Day](https://adventofcode.com/2021/day/1).

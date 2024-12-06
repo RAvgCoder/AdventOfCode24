@@ -1,4 +1,4 @@
-use crate::utils::day_setup::Utils;
+use aoc_utils_rust::day_setup::Utils;
 use std::iter::Peekable;
 
 /// Runs the Advent of Code puzzles for [Current Day](https://adventofcode.com/2021/day/4).
@@ -33,17 +33,9 @@ impl WordSearch {
     }
 
     fn find_all_x_mas_instances(&self) -> u16 {
-        let mut instances = 0;
-        for (i, word) in self.words.iter().enumerate() {
-            let i1 = Self::find_sub_string_instances_x_mas_diagonally(i, &self.words);
-            // println!("W: {}", word);
-            // if i1 != 0 {
-            //     println!("Yes {i1}")
-            // }
-            instances += i1;
-        }
-
-        instances
+        (0..self.words.len())
+            .map(|i| Self::find_sub_string_instances_x_mas_diagonally(i, &self.words))
+            .sum()
     }
 
     fn find_sub_string_instances_x_mas_diagonally(row: usize, input: &[String]) -> u16 {
@@ -54,11 +46,16 @@ impl WordSearch {
         let lower_bound = input.len() - 1;
         if (higher_bound..lower_bound).contains(&row) {
             // Left
-            for (i, e) in input[row].chars().enumerate().take(lower_bound).skip(higher_bound) {
+            for (i, e) in input[row]
+                .chars()
+                .enumerate()
+                .take(lower_bound)
+                .skip(higher_bound)
+            {
                 if e != 'A' {
                     continue;
                 }
-                let mut x_mas_set = [[false, false], [false, false]]; // [M, S]
+                let mut x_mas_set = [[false, false], [false, false]]; // [(top_left to bottom_right)[M, S], (top_right to bottom left)[M, S]]
 
                 // top_left -> bottom_right
                 let tl = input[row - 1].chars().nth(i - 1).unwrap();
@@ -104,27 +101,27 @@ impl WordSearch {
                 }
             }
         }
-        
+
         counter
     }
 
     const XMAS: &'static str = "XMAS";
     fn find_all_xmas_instances(&self) -> u16 {
-        let mut instances = 0;
-
-        for (i, word) in self.words.iter().enumerate() {
-            instances += Self::find_sub_string_instances_row(word.chars().peekable())
-                + Self::find_sub_string_instances_row(word.chars().rev().peekable())
-                + Self::find_sub_string_instances_col(i, &self.words)
-                + Self::find_sub_string_instances_xmas_diagonally(i, &self.words);
-        }
-
-        instances
+        self.words
+            .iter()
+            .enumerate()
+            .map(|(i, word)| {
+                Self::find_sub_string_instances_row(word.chars().peekable())
+                    + Self::find_sub_string_instances_row(word.chars().rev().peekable())
+                    + Self::find_sub_string_instances_col(i, &self.words)
+                    + Self::find_sub_string_instances_xmas_diagonally(i, &self.words)
+            })
+            .sum()
     }
 
     fn find_sub_string_instances_row<T>(mut word: Peekable<T>) -> u16
     where
-        T: Iterator<Item=char>,
+        T: Iterator<Item = char>,
     {
         let mut counter = 0;
 
@@ -157,11 +154,11 @@ impl WordSearch {
                 if e == Self::XMAS.chars().next().unwrap() {
                     if Self::XMAS
                         == format!(
-                        "X{}{}{}",
-                        input[row - 1].chars().nth(i - 1).unwrap(),
-                        input[row - 2].chars().nth(i - 2).unwrap(),
-                        input[row - 3].chars().nth(i - 3).unwrap(),
-                    )
+                            "X{}{}{}",
+                            input[row - 1].chars().nth(i - 1).unwrap(),
+                            input[row - 2].chars().nth(i - 2).unwrap(),
+                            input[row - 3].chars().nth(i - 3).unwrap(),
+                        )
                     {
                         counter += 1;
                     }
@@ -173,11 +170,11 @@ impl WordSearch {
                 if e == Self::XMAS.chars().next().unwrap() {
                     if Self::XMAS
                         == format!(
-                        "X{}{}{}",
-                        input[row - 1].chars().nth(i + 1).unwrap(),
-                        input[row - 2].chars().nth(i + 2).unwrap(),
-                        input[row - 3].chars().nth(i + 3).unwrap(),
-                    )
+                            "X{}{}{}",
+                            input[row - 1].chars().nth(i + 1).unwrap(),
+                            input[row - 2].chars().nth(i + 2).unwrap(),
+                            input[row - 3].chars().nth(i + 3).unwrap(),
+                        )
                     {
                         counter += 1;
                     }
@@ -192,11 +189,11 @@ impl WordSearch {
                 if e == Self::XMAS.chars().next().unwrap() {
                     if Self::XMAS
                         == format!(
-                        "X{}{}{}",
-                        input[row + 1].chars().nth(i - 1).unwrap(),
-                        input[row + 2].chars().nth(i - 2).unwrap(),
-                        input[row + 3].chars().nth(i - 3).unwrap(),
-                    )
+                            "X{}{}{}",
+                            input[row + 1].chars().nth(i - 1).unwrap(),
+                            input[row + 2].chars().nth(i - 2).unwrap(),
+                            input[row + 3].chars().nth(i - 3).unwrap(),
+                        )
                     {
                         counter += 1;
                     }
@@ -208,11 +205,11 @@ impl WordSearch {
                 if e == Self::XMAS.chars().next().unwrap() {
                     if Self::XMAS
                         == format!(
-                        "X{}{}{}",
-                        input[row + 1].chars().nth(i + 1).unwrap(),
-                        input[row + 2].chars().nth(i + 2).unwrap(),
-                        input[row + 3].chars().nth(i + 3).unwrap(),
-                    )
+                            "X{}{}{}",
+                            input[row + 1].chars().nth(i + 1).unwrap(),
+                            input[row + 2].chars().nth(i + 2).unwrap(),
+                            input[row + 3].chars().nth(i + 3).unwrap(),
+                        )
                     {
                         counter += 1;
                     }
@@ -232,11 +229,11 @@ impl WordSearch {
                 if e == Self::XMAS.chars().next().unwrap() {
                     if Self::XMAS
                         == format!(
-                        "X{}{}{}",
-                        input[row - 1].chars().nth(i).unwrap(),
-                        input[row - 2].chars().nth(i).unwrap(),
-                        input[row - 3].chars().nth(i).unwrap(),
-                    )
+                            "X{}{}{}",
+                            input[row - 1].chars().nth(i).unwrap(),
+                            input[row - 2].chars().nth(i).unwrap(),
+                            input[row - 3].chars().nth(i).unwrap(),
+                        )
                     {
                         counter += 1;
                     }
@@ -250,11 +247,11 @@ impl WordSearch {
                 if e == Self::XMAS.chars().next().unwrap() {
                     if Self::XMAS
                         == format!(
-                        "X{}{}{}",
-                        input[row + 1].chars().nth(i).unwrap(),
-                        input[row + 2].chars().nth(i).unwrap(),
-                        input[row + 3].chars().nth(i).unwrap(),
-                    )
+                            "X{}{}{}",
+                            input[row + 1].chars().nth(i).unwrap(),
+                            input[row + 2].chars().nth(i).unwrap(),
+                            input[row + 3].chars().nth(i).unwrap(),
+                        )
                     {
                         counter += 1;
                     }
