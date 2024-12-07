@@ -6,9 +6,10 @@ mod day3;
 mod day4;
 mod day5;
 mod day6;
+mod day7;
 
 fn main() {
-    // Utils::new_day(6, 2024);
+    // Utils::new_day(7, 24);
 
     let days = [
         day1::run,
@@ -17,6 +18,7 @@ fn main() {
         day4::run,
         day5::run,
         day6::run,
+        day7::run,
     ];
 
     days.last().unwrap()();

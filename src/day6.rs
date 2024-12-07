@@ -15,8 +15,8 @@ use std::fmt::{Debug, Formatter};
 ///   If the result of any part does not match the expected value.
 pub fn run() {
     // run_part(day_func_part_to_run, part_num, day_num)
-    Utils::run_part_single(part1, 1, 6, Some(5461));
-    Utils::run_part_single(part2, 2, 6, Some(1836));
+    Utils::run_part(part1, 1, 6, Some(5461));
+    Utils::run_part(part2, 2, 6, Some(1836));
 }
 
 fn part1(mut office_plan: OfficePlan) -> usize {
@@ -56,6 +56,7 @@ impl OfficePlan {
         let mut guard = self.guard_position;
         let mut direction = Direction::direction_list().into_iter().cycle().peekable();
         let mut cycle_checker = HashSet::with_capacity(self.map.num_cols() * self.map.num_rows());
+
         loop {
             let curr_direction = *direction.peek().unwrap();
 
