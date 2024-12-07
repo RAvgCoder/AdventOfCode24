@@ -10,8 +10,8 @@ use std::iter::Peekable;
 ///   If the result of any part does not match the expected value.
 pub fn run() {
     // run_part(day_func_part_to_run, part_num, day_num)
-    Utils::run_part_single(part1, 1, 4, Some(2414));
-    Utils::run_part_single(part2, 2, 4, Some(1871));
+    Utils::run_part(part1, 1, 4, Some(2414));
+    Utils::run_part(part2, 2, 4, Some(1871));
 }
 
 fn part1(word_search: WordSearch) -> u16 {
