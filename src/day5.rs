@@ -10,8 +10,8 @@ use std::collections::{HashMap, HashSet};
 ///   If the result of any part does not match the expected value.
 pub fn run() {
     // run_part(day_func_part_to_run, part_num, day_num)
-    Utils::run_part(part1, 1, 0, Some(5091));
-    Utils::run_part(part2, 2, 0, None);
+    Utils::run_part(part1, 1, 5, Some(5091));
+    Utils::run_part(part2, 2, 5, Some(4681));
 }
 
 fn part1(book: Books) -> u32 {
@@ -19,19 +19,66 @@ fn part1(book: Books) -> u32 {
 }
 
 fn part2(book: Books) -> u32 {
-    // book.partition().1.sum_middle_pages()
-    0
-}
-
-#[derive(Debug)]
-struct Books {
-    rules: HashMap<u8, HashSet<u8>>,
-    books: Vec<Vec<u8>>,
+    book.partition().1.fix_unordered_books().sum_middle_pages()
 }
 
 struct UnorderedBooks {
     rules: HashMap<u8, HashSet<u8>>,
-    unordered_pages: Vec<Vec<u8>>,
+    unordered_books: Vec<Vec<u8>>,
+}
+
+impl UnorderedBooks {
+    fn top_sort(
+        curr_node: &u8,
+        adj_list: &HashMap<u8, Vec<u8>>,
+        result: &mut Vec<u8>,
+        cache: &mut HashSet<u8>,
+    ) {
+        if !cache.insert(*curr_node) {
+            return;
+        }
+
+        // Run top_sort
+        for next_node in adj_list.get(curr_node).unwrap() {
+            Self::top_sort(next_node, adj_list, result, cache)
+        }
+
+        result.push(*curr_node)
+    }
+
+    fn fix_unordered_books(self) -> OrderedBooks {
+        let mut ordered_pages = Vec::with_capacity(self.unordered_books.len());
+        let mut page_set = HashSet::with_capacity(self.unordered_books.len());
+        let mut adj_list = HashMap::new();
+        let mut top_sort_cache = HashSet::new();
+        for book in &self.unordered_books {
+            page_set.clear();
+            adj_list.clear();
+            top_sort_cache.clear();
+
+            page_set.extend(book);
+
+            // Build adj-list
+            for page in book {
+                let edges = self
+                    .rules
+                    .get(page)
+                    .unwrap_or(&HashSet::new())
+                    .intersection(&page_set)
+                    .map(|&e| e)
+                    .collect::<Vec<_>>();
+                adj_list.insert(*page, edges);
+            }
+
+            // run_top_sort
+            let mut result = Vec::new();
+            for node in adj_list.keys() {
+                Self::top_sort(node, &adj_list, &mut result, &mut top_sort_cache);
+            }
+            ordered_pages.push(result);
+        }
+        OrderedBooks { ordered_pages }
+    }
 }
 
 struct OrderedBooks {
@@ -45,6 +92,12 @@ impl OrderedBooks {
             .map(|page| page[page.len() / 2] as u32)
             .sum()
     }
+}
+
+#[derive(Debug)]
+struct Books {
+    rules: HashMap<u8, HashSet<u8>>,
+    books: Vec<Vec<u8>>,
 }
 
 impl Books {
@@ -75,7 +128,7 @@ impl Books {
             OrderedBooks { ordered_pages },
             UnorderedBooks {
                 rules: self.rules,
-                unordered_pages,
+                unordered_books: unordered_pages,
             },
         )
     }
