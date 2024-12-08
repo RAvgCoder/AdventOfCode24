@@ -1,4 +1,5 @@
 use aoc_utils_rust::day_setup::Utils;
+use aoc_utils_rust::graph::Graph;
 use std::collections::{HashMap, HashSet};
 
 /// Runs the Advent of Code puzzles for [Current Day](https://adventofcode.com/2024/day/5).
@@ -28,54 +29,38 @@ struct UnorderedBooks {
 }
 
 impl UnorderedBooks {
-    fn top_sort(
-        curr_node: &u8,
-        adj_list: &HashMap<u8, Vec<u8>>,
-        result: &mut Vec<u8>,
-        cache: &mut HashSet<u8>,
-    ) {
-        if !cache.insert(*curr_node) {
-            return;
-        }
-
-        // Run top_sort
-        for next_node in adj_list.get(curr_node).unwrap() {
-            Self::top_sort(next_node, adj_list, result, cache)
-        }
-
-        result.push(*curr_node)
-    }
-
     fn fix_unordered_books(self) -> OrderedBooks {
         let mut ordered_pages = Vec::with_capacity(self.unordered_books.len());
         let mut page_set = HashSet::with_capacity(self.unordered_books.len());
-        let mut adj_list = HashMap::new();
-        let mut top_sort_cache = HashSet::new();
-        for book in &self.unordered_books {
+        for book in self.unordered_books {
             page_set.clear();
-            adj_list.clear();
-            top_sort_cache.clear();
+            page_set.extend(&book);
 
-            page_set.extend(book);
+            let adjacency_list = book
+                .into_iter()
+                .map(|page| {
+                    (
+                        page,
+                        self.rules
+                            .get(&page)
+                            .unwrap_or(&HashSet::new())
+                            .intersection(&page_set)
+                            .map(|&e| e)
+                            .collect::<Vec<_>>(),
+                    )
+                })
+                .collect::<HashMap<_, Vec<_>>>();
 
-            // Build adj-list
-            for page in book {
-                let edges = self
-                    .rules
-                    .get(page)
-                    .unwrap_or(&HashSet::new())
-                    .intersection(&page_set)
-                    .map(|&e| e)
-                    .collect::<Vec<_>>();
-                adj_list.insert(*page, edges);
-            }
+            let graph = Graph::<_, ()>::from(adjacency_list);
 
-            // run_top_sort
-            let mut result = Vec::new();
-            for node in adj_list.keys() {
-                Self::top_sort(node, &adj_list, &mut result, &mut top_sort_cache);
-            }
-            ordered_pages.push(result);
+            ordered_pages.push(
+                graph
+                    .topological_sort()
+                    .expect("Cycle detected in graph")
+                    .into_iter()
+                    .map(|ptr| *graph.get(ptr).unwrap())
+                    .collect(),
+            );
         }
         OrderedBooks { ordered_pages }
     }
