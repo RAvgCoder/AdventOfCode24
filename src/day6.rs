@@ -115,7 +115,7 @@ impl From<Vec<String>> for OfficePlan {
     fn from(value: Vec<String>) -> Self {
         let mut guard = None;
         Self {
-            map: UnsizedGrid::new(
+            map: UnsizedGrid::from_vec(
                 value
                     .into_iter()
                     .enumerate()
