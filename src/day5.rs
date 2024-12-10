@@ -1,6 +1,6 @@
 use aoc_utils_rust::day_setup::Utils;
-use aoc_utils_rust::graph::Graph;
 use std::collections::{HashMap, HashSet};
+use aoc_utils_rust::graph::static_graph::StaticGraph;
 
 /// Runs the Advent of Code puzzles for [Current Day](https://adventofcode.com/2024/day/5).
 ///
@@ -51,7 +51,7 @@ impl UnorderedBooks {
                 })
                 .collect::<HashMap<_, Vec<_>>>();
 
-            let graph = Graph::<_, ()>::from(adjacency_list);
+            let graph = StaticGraph::<_, ()>::from(adjacency_list);
 
             ordered_pages.push(
                 graph
