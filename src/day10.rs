@@ -28,14 +28,14 @@ fn part2(topographic_map: TopographicMap) -> u16 {
 
 #[derive(Debug)]
 struct TopographicMap {
-    map: UnsizedGrid<i8>,
+    map: UnsizedGrid<u8>,
 }
 
 impl TopographicMap {
     fn count_rating(&self) -> u16 {
         fn dfs_rating(
             curr: Coordinate,
-            map: &UnsizedGrid<i8>,
+            map: &UnsizedGrid<u8>,
             visited: &mut [bool; 9],
             queue: &mut VecDeque<Coordinate>,
         ) -> u16 {
@@ -47,9 +47,7 @@ impl TopographicMap {
             if curr_num == 9 {
                 return 1;
             }
-            if curr_num == -1 {
-                return 0;
-            }
+
             if visited[curr_num as usize] {
                 return 0;
             }
@@ -78,13 +76,9 @@ impl TopographicMap {
         let mut rating = 0;
 
         let mut queue = VecDeque::new();
-        for row in self.map.iter() {
-            for (coord, &e) in row {
-                if e == 0 {
-                    rating += dfs_rating(coord, &self.map, &mut [false; 9], &mut queue);
-                    queue.clear();
-                }
-            }
+        for (coord, _) in self.map.iter().flatten().filter(|(_, &e)| e == 0) {
+            rating += dfs_rating(coord, &self.map, &mut [false; 9], &mut queue);
+            queue.clear();
         }
 
         rating
@@ -134,11 +128,8 @@ impl From<Vec<String>> for TopographicMap {
         let mut map = UnsizedGrid::new(row, col, 0);
         for (i, row) in value.iter().enumerate() {
             for (j, e) in row.chars().enumerate() {
-                *map.get_mut(&Coordinate::new(i as i32, j as i32)).unwrap() = if e == '.' {
-                    -1
-                } else {
+                *map.get_mut(&Coordinate::new(i as i32, j as i32)).unwrap() =
                     e.to_digit(10).unwrap() as _
-                };
             }
         }
         Self { map }
