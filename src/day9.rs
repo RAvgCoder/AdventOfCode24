@@ -29,8 +29,9 @@ struct DiskMap {
 impl DiskMap {
     fn un_fragmented_check_sum(self) -> u64 {
         // (idx_in_disc, num_of_vals, nums)
-        let mut map_num_with_indices: Vec<(usize, (u8, u32))> = Vec::with_capacity(self.maps.len()/2);
-        let mut map_spaces_with_indices: Vec<(usize, u8)> = Vec::with_capacity(self.maps.len()/2);
+        let mut map_num_with_indices: Vec<(usize, (u8, u32))> =
+            Vec::with_capacity(self.maps.len() / 2);
+        let mut map_spaces_with_indices: Vec<(usize, u8)> = Vec::with_capacity(self.maps.len() / 2);
         let _ =
             self.maps
                 .iter()
@@ -50,7 +51,7 @@ impl DiskMap {
                         },
                     )
                 });
-        
+
         let mut map_num_ptr = map_num_with_indices.iter().rev();
 
         let mut check_sum = 0;
