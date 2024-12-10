@@ -73,15 +73,12 @@ impl TopographicMap {
             rating
         }
 
-        let mut rating = 0;
-
-        let mut queue = VecDeque::new();
-        for (coord, _) in self.map.iter().flatten().filter(|(_, &e)| e == 0) {
-            rating += dfs_rating(coord, &self.map, &mut [false; 9], &mut queue);
-            queue.clear();
-        }
-
-        rating
+        self.map
+            .iter()
+            .flatten()
+            .filter(|(_, &e)| e == 0)
+            .map(|(coord, _)| dfs_rating(coord, &self.map, &mut [false; 9], &mut VecDeque::new()))
+            .sum()
     }
 
     fn count_trail_heads(&self) -> u16 {
