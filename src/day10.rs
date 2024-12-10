@@ -15,25 +15,81 @@ use std::collections::{HashSet, VecDeque};
 pub fn run() {
     // run_part(day_func_part_to_run, part_num, day_num)
     Utils::run_part(part1, 1, 10, Some(459));
-    Utils::run_part(part2, 2, 0, None);
+    Utils::run_part(part2, 2, 10, None);
 }
 
 fn part1(topographic_map: TopographicMap) -> u16 {
-    // println!("{:#?}", topographic_map);
     topographic_map.count_trail_heads()
 }
 
-fn part2(input: Vec<String>) -> u64 {
-    // println!("Part 2 {:#?}", input);
-    0
+fn part2(topographic_map: TopographicMap) -> u16 {
+    topographic_map.count_rating()
 }
 
 #[derive(Debug)]
 struct TopographicMap {
-    map: UnsizedGrid<u8>,
+    map: UnsizedGrid<i8>,
 }
 
 impl TopographicMap {
+    fn count_rating(&self) -> u16 {
+        fn dfs_rating(
+            curr: Coordinate,
+            map: &UnsizedGrid<i8>,
+            visited: &mut [bool; 9],
+            queue: &mut VecDeque<Coordinate>,
+        ) -> u16 {
+            if !map.is_valid_coordinate(&curr) {
+                return 0;
+            }
+
+            let curr_num = *map.get(&curr).unwrap();
+            if curr_num == 9 {
+                return 1;
+            }
+            if curr_num == -1 {
+                return 0;
+            }
+            if visited[curr_num as usize] {
+                return 0;
+            }
+
+            visited[curr_num as usize] = true;
+
+            let mut rating = 0;
+            Direction::direction_list()
+                .map(|dir| curr + dir)
+                .into_iter()
+                .filter(|next_coord| {
+                    if let Some(&next_num) = map.get(next_coord) {
+                        next_num == curr_num + 1
+                    } else {
+                        false
+                    }
+                })
+                .for_each(|next| {
+                    rating += dfs_rating(next, map, visited, queue);
+                });
+
+            visited[curr_num as usize] = false;
+            rating
+        }
+
+        let mut rating = 0;
+
+        let mut queue = VecDeque::new();
+        for row in self.map.iter() {
+            for (coord, &e) in row {
+                if e == 0 {
+                    rating += dfs_rating(coord, &self.map, &mut [false; 9], &mut queue);
+                    queue.clear();
+                }
+            }
+        }
+
+        rating
+    }
+
     fn count_trail_heads(&self) -> u16 {
         let mut trail_heads = 0;
         let map = &self.map;
@@ -78,8 +134,11 @@ impl From<Vec<String>> for TopographicMap {
         let mut map = UnsizedGrid::new(row, col, 0);
         for (i, row) in value.iter().enumerate() {
             for (j, e) in row.chars().enumerate() {
-                *map.get_mut(&Coordinate::new(i as i32, j as i32)).unwrap() =
-                    e.to_digit(10).unwrap() as u8;
+                *map.get_mut(&Coordinate::new(i as i32, j as i32)).unwrap() = if e == '.' {
+                    -1
+                } else {
+                    e.to_digit(10).unwrap() as _
+                };
             }
         }
         Self { map }
