@@ -15,7 +15,7 @@ use std::collections::{HashSet, VecDeque};
 pub fn run() {
     // run_part(day_func_part_to_run, part_num, day_num)
     Utils::run_part(part1, 1, 10, Some(459));
-    Utils::run_part(part2, 2, 10, None);
+    Utils::run_part(part2, 2, 10, Some(1034));
 }
 
 fn part1(topographic_map: TopographicMap) -> u16 {
