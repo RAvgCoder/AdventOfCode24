@@ -1,6 +1,6 @@
 use aoc_utils_rust::day_setup::Utils;
-use std::collections::{HashMap, HashSet};
 use aoc_utils_rust::graph::static_graph::StaticGraph;
+use std::collections::{HashMap, HashSet};
 
 /// Runs the Advent of Code puzzles for [Current Day](https://adventofcode.com/2024/day/5).
 ///
