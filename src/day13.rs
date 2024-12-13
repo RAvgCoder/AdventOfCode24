@@ -88,20 +88,20 @@ impl Machine {
     /// An `Option` containing the minimum number of tickets required to reach the prize, or `None` if it is not possible.
     fn minimum_tickets_linear_algebra(&self) -> Option<i64> {
         let det = self.determinant(self.button_a, self.button_b);
-        let x = self.determinant(self.prize, self.button_b);
-        let dx = x / det;
+        if det != 0 { // There's at least a solution
+            let x = self.determinant(self.prize, self.button_b);
+            let dx = x / det;
 
-        let y = self.determinant(self.button_a, self.prize);
-        let dy = y / det;
+            let y = self.determinant(self.button_a, self.prize);
+            let dy = y / det;
 
-        let a = self.button_a.0 * dx + self.button_b.0 * dy;
-        let b = self.button_a.1 * dx + self.button_b.1 * dy;
-
-        if (a, b) == self.prize {
-            Some(dx * Machine::BUTTON_A_MULTIPLIER + dy * Machine::BUTTON_B_MULTIPLIER)
-        } else {
-            None
+            let a = self.button_a.0 * dx + self.button_b.0 * dy;
+            let b = self.button_a.1 * dx + self.button_b.1 * dy;
+            if (a, b) == self.prize {
+                return Some(dx * Machine::BUTTON_A_MULTIPLIER + dy * Machine::BUTTON_B_MULTIPLIER);
+            }
         }
+        None
     }
 
     fn determinant(&self, a: (i64, i64), b: (i64, i64)) -> i64 {
