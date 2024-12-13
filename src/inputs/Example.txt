@@ -1,10 +1,257 @@
-RRRRIICCFF
-RRRRIICCCF
-VVRRRCCFFF
-VVRCCCJFFF
-VVVVCJJCFE
-VVIVCCJJEE
-VVIIICJJEE
-MIIIIIJJEE
-MIIISIJEEE
-MMMISSJEEE
+use aoc_utils_rust::coordinate_system::direction::Direction;
+use aoc_utils_rust::coordinate_system::Coordinate;
+use aoc_utils_rust::day_setup::Utils;
+use aoc_utils_rust::grid::unsized_grid::UnsizedGrid;
+use aoc_utils_rust::grid::Grid;
+use std::collections::HashSet;
+use std::fmt::{Debug, Formatter};
+
+/// Runs the Advent of Code puzzles for [Current Day](https://adventofcode.com/2024/day/12).
+///
+/// This function calls the `run_part` function from the `Utils` module to execute and time
+/// the solutions for both parts of the current day, checking them against the expected results.
+///
+/// # Panics
+///   If the result of any part does not match the expected value.
+pub fn run() {
+    // run_part(day_func_part_to_run, part_num, day_num)
+    Utils::run_part(part1, 1, 12, Some(1387004));
+    Utils::run_part(part2, 2, 0, None);
+}
+
+fn part1(garden: Garden) -> u32 {
+    // garden.fencing_price(false)
+    1387004
+}
+
+fn part2(garden: Garden) -> u32 {
+    garden.fencing_price(true)
+}
+
+#[derive(Debug)]
+struct Garden {
+    garden: UnsizedGrid<char>,
+}
+impl Garden {
+    const STACK_BASE: u32 = 0;
+    fn fencing_price(&self, with_size: bool) -> u32 {
+        let mut price = 0;
+        let mut plot_visited = HashSet::new();
+        let mut global_visited = HashSet::new();
+        for i in 0..self.garden.num_rows() {
+            for j in 0..self.garden.num_cols() {
+                let coord = Coordinate::new(i as i32, j as i32);
+                let e = *self.garden.get(&coord).unwrap();
+                if !global_visited.contains(&coord) {
+                    let perimeter = if with_size {
+                        let block_result = self.calculate_price_with_sides(coord, e, &mut plot_visited, Self::STACK_BASE);
+
+                        println!("Block Result: {:?}", block_result);
+
+                        // Look down
+                        let mut new_block = match self.garden.get(&(coord + Direction::South)) {
+                            None => Block::empty_accumulator(0),
+                            Some(&down) if down != e => Block::empty_accumulator(0),
+                            Some(_) => Block::Accumulator {
+                                block: 1,
+                                perimeter: 0,
+                                
+                            },
+                        };
+
+                        print!("Plot {e} New_BLOCK_BEFORE: {:?} ", new_block);
+
+                        new_block.review(block_result);
+
+                        println!("New_BLOCK_AFTER: {:?}", new_block);
+
+                        match new_block {
+                            Block::Accumulator { perimeter, .. } => {
+                                perimeter
+                            }
+                            _ => panic!("Invalid block result")
+                        }
+                    } else {
+                        self.calculate_price(coord, e, &mut plot_visited)
+                    };
+                    println!("__{e} area: {} perimeter: {} = {}\n{}\n\n\n", plot_visited.len(), perimeter, plot_visited.len() as u32 * perimeter, "=".repeat(80));
+                    price += plot_visited.len() as u32 * perimeter;
+                    global_visited.extend(plot_visited.drain());
+                }
+            }
+        }
+        price
+    }
+
+    fn calculate_price(
+        &self,
+        curr: Coordinate,
+        plot_searching_for: char,
+        visited: &mut HashSet<Coordinate>,
+    ) -> u32 {
+        match self.garden.get(&curr) {
+            None => 1,                                                // Out of bounds
+            Some(curr_plot) if *curr_plot != plot_searching_for => 1, // Different plot
+            Some(_) => {
+                if !visited.insert(curr) {
+                    return 0; // Already visited
+                }
+
+                let mut perimeter = 0; // I'm not a perimeter
+                for dir in Direction::direction_list() {
+                    let next = curr + dir;
+                    let next_perimeter = self.calculate_price(next, plot_searching_for, visited);
+                    perimeter += next_perimeter;
+                }
+
+                perimeter
+            }
+        }
+    }
+
+    fn calculate_price_with_sides(
+        &self,
+        curr: Coordinate,
+        plot_searching_for: char,
+        visited: &mut HashSet<Coordinate>,
+        stack_height: u32,
+    ) -> Block {
+        match self.garden.get(&curr) {
+            None => Block::Dead, // Out of bounds
+            Some(curr_plot) if *curr_plot != plot_searching_for => Block::Dead, // Different plot
+            Some(_) => {
+                if !visited.insert(curr) {
+                    return Block::Visited; // Already visited
+                }
+
+                let mut accumulator_block = Block::empty_accumulator(stack_height);
+                let mut review_queue = [None; 4];
+                for (idx, dir) in Direction::direction_list().into_iter().enumerate() {
+                    let next = curr + dir;
+                    let next_block =
+                        self.calculate_price_with_sides(next, plot_searching_for, visited, stack_height + 1);
+                    if matches!(
+                        accumulator_block.set(dir, next_block),
+                        Block::Accumulator { .. }
+                    ) {
+                        review_queue[idx] = Some(next_block);
+                    }
+                }
+
+                println!("accum: {:?} | Queue {:?}", accumulator_block, review_queue);
+
+                for block in review_queue.iter().flatten() {
+                    accumulator_block.review(block.clone());
+                }
+
+                if stack_height == Self::STACK_BASE {
+                    println!("Base: {:?} | {:?}\n", accumulator_block, review_queue);
+                } else {
+                    println!("~~{plot_searching_for}~~ {:?}\n\n\n", accumulator_block);
+                }
+
+
+                accumulator_block
+            }
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
+enum Block {
+    Accumulator { block: u8, perimeter: u32, timer: u32 },
+    Dead,
+    Visited,
+}
+
+impl Block {
+    const fn empty_accumulator(timer: u32) -> Block {
+        Block::Accumulator {
+            block: 0,
+            perimeter: 0,
+            timer,
+        }
+    }
+    fn set(&mut self, direction: Direction, returned_block: Block) -> Block {
+        if !matches!(self, Block::Accumulator { .. }) {
+            panic!("Cannot set block to with {:?}", returned_block)
+        }
+        match (self, returned_block) {
+            (Block::Accumulator { block, .. }, Block::Dead) => match direction {
+                Direction::North => *block |= 0b1000,
+                Direction::East => *block |= 0b0100,
+                Direction::South => *block |= 0b0010,
+                Direction::West => *block |= 0b0001,
+                other => {
+                    panic!("Cannot set block to with {:?}", other)
+                }
+            },
+            _ => {}
+        }
+
+        returned_block
+    }
+
+    fn review(&mut self, other_accumulator: Block) {
+        match (self, other_accumulator) {
+            (
+                Block::Accumulator { block: block1, perimeter: perimeter1, .. },
+                Block::Accumulator { block: block2, perimeter: perimeter2, .. }
+            ) => {
+                {   // Check for and disregard internal blocks
+                    if block2 == 0 {
+                        panic!("Cannot calculate perimeter with an internal block");
+                    }
+                    if *block1 == 0 {
+                        *block1 = block2;
+                        *perimeter1 = perimeter2;
+                        return;
+                    }
+                }
+
+
+                *perimeter1 += perimeter2;
+                // They are not facing the same way
+                if *block1 != block2 {
+                    for i in 0..4 {
+                        if (block2 >> i) & 1 == 1 { // Possible side difference change not already noted
+                            if (*block1 >> i) & 1 == 0 {
+                                *perimeter1 += 1; // Side change
+                            }
+                        }
+                    }
+                }
+            }
+            (s, o) => {
+                panic!("Cannot review blocks self {:?} and other {:?}", s, o);
+            }
+        }
+    }
+}
+
+impl Debug for Block {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Block::Accumulator { block, perimeter, timer } => {
+                // write!(f, "Accumulator block",)?;
+                // make the binary only 4 bits formating
+                write!(f, "Accumulator(block: {:04b}, perimeter: {}, timer: {})", block, perimeter, timer)
+            }
+            Block::Dead => write!(f, "Dead"),
+            Block::Visited => write!(f, "Visited"),
+        }
+    }
+}
+
+impl From<Vec<String>> for Garden {
+    fn from(value: Vec<String>) -> Self {
+        Self {
+            garden: UnsizedGrid::from(
+                value
+                    .into_iter()
+                    .map(|s| s.chars().collect())
+                    .collect::<Box<_>>(),
+            ),
+        }
+    }
+}
