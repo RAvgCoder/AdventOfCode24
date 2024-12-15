@@ -1,7 +1,7 @@
 use aoc_utils_rust::coordinate_system::Coordinate;
 use aoc_utils_rust::day_setup::Utils;
 use aoc_utils_rust::grid::sized_grid::SizedGrid;
-use aoc_utils_rust::grid::Grid;
+use aoc_utils_rust::grid::GridMut;
 use aoc_utils_rust::math::Math;
 use std::str::FromStr;
 
@@ -15,7 +15,7 @@ use std::str::FromStr;
 pub fn run() {
     // run_part(day_func_part_to_run, part_num, day_num)
     Utils::run_part(part1, 1, 14, Some(232253028));
-    Utils::run_part(part2, 2, 14, None);
+    Utils::run_part(part2, 2, 14, Some(8179));
 }
 
 fn part1(mut robot_simulation: RobotSimulation<101, 103>) -> u32 {
@@ -26,13 +26,20 @@ fn part1(mut robot_simulation: RobotSimulation<101, 103>) -> u32 {
 
 type Buffer<'a> = (&'a mut SizedGrid<char, 103, 101>, &'a mut String);
 fn part2(mut robot_simulation: RobotSimulation<101, 103>) -> u16 {
-    let mut sized_grid = SizedGrid::new('_');
+    let mut grid_buff = SizedGrid::new('_');
     let mut buff = String::with_capacity(103 * 101);
-    for n in 1..u16::MAX {
+    for time in 1..u16::MAX {
         robot_simulation.bulk_simulate_robots(1);
         // Put the thread to sleep for a second
-        if robot_simulation.has_made_tree((&mut sized_grid, &mut buff)) {
-            return n;
+        if robot_simulation.has_made_tree((&mut grid_buff, &mut buff)) {
+            #[cfg(debug_assertions)]
+            aoc_utils_rust::miscellaneous::dump_grid_to_file(
+                &grid_buff,
+                "grid_output.txt",
+                Some(|e: &char| *e),
+            )
+            .expect("Failed to dump grid to file");
+            return time;
         }
     }
     panic!("No christmas trees found");
