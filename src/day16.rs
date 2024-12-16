@@ -77,11 +77,11 @@ impl ReindeerMaze {
                 let next_coord = curr_coord + next_dir;
 
                 let new_score = curr_score
-                    + if next_dir == curr_dir.opposite() || next_dir == curr_dir {
-                        BASE_MULTIPLIER
-                    } else {
-                        NINETY_DEGREE_TURN_MULTIPLIER
-                    };
+                    + if next_dir == curr_dir.rotate_180() || next_dir == curr_dir {
+                    BASE_MULTIPLIER
+                } else {
+                    NINETY_DEGREE_TURN_MULTIPLIER
+                };
 
                 queue.push_back((next_coord, next_dir, new_score));
             }
@@ -94,14 +94,13 @@ impl ReindeerMaze {
     where
         T: Debug,
     {
-        println!("Score: {}", score);
         aoc_utils_rust::miscellaneous::dump_grid_to_file(
             grid,
-            "grid_output.txt",
+            None,
             false,
             None::<fn(&T) -> char>,
         )
-        .expect("Failed to dump grid to file");
+            .expect("Failed to dump grid to file");
     }
 
     fn get_sim(dir: Direction) -> Objects {
