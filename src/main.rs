@@ -36,7 +36,7 @@ fn main() {
         day15::run,
     ];
 
-    days.into_iter().into_iter().for_each(|f| {
+    days.into_iter().last().into_iter().for_each(|f| {
         f();
         println!()
     });
