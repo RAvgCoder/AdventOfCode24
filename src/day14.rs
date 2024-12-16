@@ -36,6 +36,7 @@ fn part2(mut robot_simulation: RobotSimulation<101, 103>) -> u16 {
             aoc_utils_rust::miscellaneous::dump_grid_to_file(
                 &grid_buff,
                 "grid_output.txt",
+                false,
                 Some(|e: &char| *e),
             )
             .expect("Failed to dump grid to file");

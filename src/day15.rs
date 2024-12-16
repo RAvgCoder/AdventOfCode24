@@ -17,7 +17,7 @@ use std::mem;
 pub fn run() {
     // run_part(day_func_part_to_run, part_num, day_num)
     Utils::run_part(part1, 1, 15, Some(1538871));
-    Utils::run_part(part2, 2, 15, None);
+    Utils::run_part(part2, 2, 15, Some(1543338));
 }
 
 fn part1(mut warehouse_robot: WarehouseRobot<ObjectNormal>) -> u32 {
