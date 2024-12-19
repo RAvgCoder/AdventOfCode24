@@ -16,17 +16,12 @@ pub fn run() {
 
 fn part1(mut computer: Computer) -> String {
     while let Some(_) = computer.next() {}
-    computer
-        .output
-        .into_iter()
-        .map(|e| e.to_string())
-        .collect::<Vec<_>>()
-        .join(",")
+    computer.final_result()
 }
 
-fn part2(_input: Vec<String>) -> u64 {
-    // println!("Part 2 {:#?}", input);
-    0
+fn part2(mut computer: Computer) -> String {
+    while let Some(_) = computer.next() {}
+    computer.final_result()
 }
 
 #[derive(Debug, Clone)]
@@ -60,10 +55,16 @@ impl Computer {
         res
     }
 
-    fn save_output(&mut self, output: u32) -> Output {
-        let output = Output::new(output);
-        self.output.extend(&output.0);
-        output
+    fn save_output(&mut self, output: u32) {
+        if output == 0 {
+            self.output.push(0);
+        } else {
+            let mut temp = output;
+            while temp != 0 {
+                self.output.push((temp % 10) as u8);
+                temp /= 10;
+            }
+        }
     }
 
     fn set_pc(&mut self, new_pc: usize) {
@@ -75,29 +76,19 @@ impl Computer {
         self.pc += 1;
         res
     }
-}
 
-#[derive(Debug)]
-struct Output(Box<[u8]>);
-
-impl Output {
-    fn new(result: u32) -> Self {
-        if result == 0 {
-            Self(Box::new([0]))
-        } else {
-            let mut temp = result;
-            let mut result = Vec::new();
-            while temp != 0 {
-                result.push((temp % 10) as u8);
-                temp /= 10;
-            }
-            Self(result.into_boxed_slice())
-        }
+    fn final_result(&self) -> String {
+        self
+            .output
+            .iter()
+            .map(|e| e.to_string())
+            .collect::<Vec<_>>()
+            .join(",")
     }
 }
 
 impl Iterator for Computer {
-    type Item = Option<Output>;
+    type Item = ();
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.should_halt() {
@@ -113,7 +104,6 @@ impl Iterator for Computer {
             })
         }
 
-        let mut result = None;
         let instruction = self.read_opcode();
 
         match instruction {
@@ -149,7 +139,7 @@ impl Iterator for Computer {
                 self.read_operand().map(|operand| {
                     let operand = self.extract_value_from_operand(operand);
                     let res = operand % 8;
-                    result = Some(self.save_output(res));
+                    self.save_output(res);
                 });
             }
             6 => {
@@ -161,7 +151,7 @@ impl Iterator for Computer {
             _ => unreachable!("Invalid instruction: {}", instruction),
         }
 
-        Some(result)
+        Some(())
     }
 }
 
