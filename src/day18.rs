@@ -3,6 +3,7 @@ use aoc_utils_rust::coordinate_system::Coordinate;
 use aoc_utils_rust::day_setup::Utils;
 use aoc_utils_rust::grid::sized_grid::SizedGrid;
 use aoc_utils_rust::grid::{Grid, GridMut};
+use aoc_utils_rust::miscellaneous::the_visitor::{TheVisitor, Timer};
 use std::collections::VecDeque;
 use std::fmt::Debug;
 
@@ -16,82 +17,106 @@ use std::fmt::Debug;
 pub fn run() {
     // run_part(day_func_part_to_run, part_num, day_num)
     Utils::run_part(part1, 1, 18, Some(262));
-    Utils::run_part(part2, 2, 0, None);
+    Utils::run_part(part2, 2, 18, Some((22, 20)));
 }
 const GRID_SIZE: usize = 71;
-fn part1(mut ram_map: RamMap) -> u32 {
-    ram_map.corrupt_n_bytes(1024);
-    ram_map.find_shortest_path()
+type TimerMap = SizedGrid<Timer, GRID_SIZE, GRID_SIZE>;
+type Map = SizedGrid<bool, GRID_SIZE, GRID_SIZE>;
+fn part1(corruption_byte_stream: CorruptedByteStream) -> u32 {
+    let mut map = SizedGrid::<_, GRID_SIZE, GRID_SIZE>::new(true);
+    let mut the_visitor = {
+        let backing_grid = SizedGrid::with_size_from(&map, Timer::BLANK);
+        TheVisitor::new(backing_grid)
+    };
+    corruption_byte_stream.corrupt_n_bytes(&mut map, 1024);
+    find_shortest_path(&mut map, &mut the_visitor).expect("I'm guaranteed to find a path")
 }
 
-fn part2(input: Vec<String>) -> u64 {
-    // println!("Part 2 {:#?}", input);
-    0
+fn part2(mut corruption_byte_stream: CorruptedByteStream) -> (i32, i32) {
+    // Flip the coordinates for some reason 🤷‍♂️ (I'm not sure why he flipped the coordinates for part 2)
+    corruption_byte_stream
+        .corrupted_stream
+        .iter_mut()
+        .for_each(|c| *c = c.transpose());
+    // Find the max corrupted bytes to escape and transpose the result back (I guess u can avoid transposition if u change the
+    // start and coordinates but im too lazy for that
+    corruption_byte_stream
+        .find_max_corrupted_bytes_to_escape()
+        .transpose()
+        .into()
+}
+
+fn find_shortest_path(map: &Map, the_visitor: &mut TheVisitor<TimerMap>) -> Option<u32> {
+    let end_coord = map.bottom_right_coordinate();
+    let mut queue = VecDeque::with_capacity(map.num_cols());
+    queue.push_back((Coordinate::ORIGIN, 0));
+    while let Some((next_coord, steps)) = queue.pop_front() {
+        if next_coord == end_coord {
+            return Some(steps);
+        }
+        if the_visitor.mark_visited(next_coord) {
+            Direction::direction_list()
+                .map(|dir| next_coord + dir)
+                .iter()
+                .filter(|coord| map.get(&coord).is_some()) // Those in bounds
+                .filter(|coord| *map.get(&coord).unwrap()) // Only paths not corrupted
+                .for_each(|&next_coord| {
+                    queue.push_back((next_coord, steps + 1));
+                });
+        }
+    }
+    None
 }
 
 #[derive(Debug)]
-struct RamMap {
-    map: SizedGrid<Spots, GRID_SIZE, GRID_SIZE>,
-    byte_rain_coord: Box<[Coordinate]>,
+struct CorruptedByteStream {
+    corrupted_stream: Box<[Coordinate]>,
 }
-
-impl RamMap {
-    fn corrupt_n_bytes(&mut self, n: usize) {
-        for coord in self.byte_rain_coord.iter().take(n) {
-            *self.map.get_mut(coord).unwrap() = Spots::CorruptedByte;
+type ByteSpot = bool;
+impl CorruptedByteStream {
+    fn corrupt_n_bytes(&self, map: &mut Map, n: usize) {
+        for coord in self.corrupted_stream.iter().take(n) {
+            *map.get_mut(coord).unwrap() = false;
         }
     }
 
-    fn find_shortest_path(&mut self) -> u32 {
-        let end_coord = self.map.bottom_right_coordinate();
-        let mut queue = VecDeque::with_capacity(self.map.num_cols());
-        queue.push_back((Coordinate::ORIGIN, 0));
-        while let Some((next_coord, steps)) = queue.pop_front() {
-            if next_coord == end_coord {
-                return steps;
+    fn find_max_corrupted_bytes_to_escape(&self) -> Coordinate {
+        let mut map = SizedGrid::<bool, GRID_SIZE, GRID_SIZE>::new(true);
+        let mut the_visitor = {
+            let backing_grid = SizedGrid::with_size_from(&map, Timer::BLANK);
+            TheVisitor::new(backing_grid)
+        };
+
+        let mut l_ptr = 0;
+        let mut r_ptr = self.corrupted_stream.len() - 1;
+        let mut result = None;
+        let list = self.corrupted_stream.as_ref();
+
+        while l_ptr <= r_ptr {
+            let mid = l_ptr + (r_ptr - l_ptr) / 2;
+            self.corrupt_n_bytes(&mut map, mid);
+            if find_shortest_path(&map, &mut the_visitor).is_some() {
+                result = Some(list[mid]);
+                l_ptr = mid + 1;
+            } else {
+                r_ptr = mid - 1;
             }
-            match *self.map.get(&next_coord).unwrap() {
-                Spots::CorruptedByte | Spots::Visited => continue,
-                Spots::FreeSpace => {
-                    *self.map.get_mut(&next_coord).unwrap() = Spots::Visited;
-                    Direction::direction_list()
-                        .map(|dir| next_coord + dir)
-                        .iter()
-                        .filter(|coord| self.map.get(&coord).is_some())
-                        .for_each(|&next_coord| {
-                            queue.push_back((next_coord, steps + 1));
-                        });
-                }
-            }
+
+            the_visitor.clear();
+            map.iter_mut()
+                .for_each(|row| row.for_each(|(_, e)| *e = true));
         }
-        unreachable!("No path found")
+
+        result.unwrap()
     }
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
-enum Spots {
-    CorruptedByte,
-    FreeSpace,
-    Visited,
-}
-
-impl Debug for Spots {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Spots::CorruptedByte => write!(f, "#"),
-            Spots::FreeSpace => write!(f, "."),
-            Spots::Visited => write!(f, "_"),
-        }
-    }
-}
-
-impl From<Vec<String>> for RamMap {
+impl From<Vec<String>> for CorruptedByteStream {
     #[inline]
     fn from(input: Vec<String>) -> Self {
         use std::str::FromStr;
         Self {
-            map: SizedGrid::new(Spots::FreeSpace),
-            byte_rain_coord: input
+            corrupted_stream: input
                 .iter()
                 .map(|str| Coordinate::from_str(str).unwrap())
                 .collect::<Box<_>>(),
