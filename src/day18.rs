@@ -16,7 +16,7 @@ use std::fmt::Debug;
 ///   If the result of any part does not match the expected value.
 pub fn run() {
     // run_part(day_func_part_to_run, part_num, day_num)
-    Utils::run_part(part1, 1, 18, Some(262));
+    // Utils::run_part(part1, 1, 18, Some(262));
     Utils::run_part(part2, 2, 18, Some((22, 20)));
 }
 const GRID_SIZE: usize = 71;
@@ -28,7 +28,10 @@ fn part1(corruption_byte_stream: CorruptedByteStream) -> u32 {
         let backing_grid = SizedGrid::with_size_from(&map, Timer::BLANK);
         TheVisitor::new(backing_grid)
     };
-    corruption_byte_stream.corrupt_n_bytes(&mut map, 1024);
+    CorruptedByteStream::toggle_corrupted_bytes(
+        &mut map,
+        &corruption_byte_stream.corrupted_stream[..1024],
+    );
     find_shortest_path(&mut map, &mut the_visitor).expect("I'm guaranteed to find a path")
 }
 
@@ -74,9 +77,9 @@ struct CorruptedByteStream {
 }
 type ByteSpot = bool;
 impl CorruptedByteStream {
-    fn corrupt_n_bytes(&self, map: &mut Map, n: usize) {
-        for coord in self.corrupted_stream.iter().take(n) {
-            *map.get_mut(coord).unwrap() = false;
+    fn toggle_corrupted_bytes(map: &mut Map, corrupted_stream: &[Coordinate]) {
+        for coord in corrupted_stream.iter() {
+            *map.get_mut(coord).unwrap() ^= true;
         }
     }
 
@@ -92,9 +95,21 @@ impl CorruptedByteStream {
         let mut result = None;
         let list = self.corrupted_stream.as_ref();
 
+        let mut prev_mid = 0;
         while l_ptr <= r_ptr {
             let mid = l_ptr + (r_ptr - l_ptr) / 2;
-            self.corrupt_n_bytes(&mut map, mid);
+
+            Self::toggle_corrupted_bytes(
+                &mut map,
+                if prev_mid < mid {
+                    &list[prev_mid..mid]
+                } else {
+                    &list[mid..prev_mid]
+                },
+            );
+
+            prev_mid = mid;
+
             if find_shortest_path(&map, &mut the_visitor).is_some() {
                 result = Some(list[mid]);
                 l_ptr = mid + 1;
@@ -103,8 +118,6 @@ impl CorruptedByteStream {
             }
 
             the_visitor.clear();
-            map.iter_mut()
-                .for_each(|row| row.for_each(|(_, e)| *e = true));
         }
 
         result.unwrap()
