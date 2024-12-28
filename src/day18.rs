@@ -16,7 +16,7 @@ use std::fmt::Debug;
 ///   If the result of any part does not match the expected value.
 pub fn run() {
     // run_part(day_func_part_to_run, part_num, day_num)
-    // Utils::run_part(part1, 1, 18, Some(262));
+    Utils::run_part(part1, 1, 18, Some(262));
     Utils::run_part(part2, 2, 18, Some((22, 20)));
 }
 const GRID_SIZE: usize = 71;
