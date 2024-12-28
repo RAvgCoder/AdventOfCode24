@@ -16,11 +16,10 @@ mod day6;
 mod day7;
 mod day8;
 mod day9;
+mod test_main;
+mod day25;
 
 fn main() {
-    // (16..=25).for_each(|i| {
-    //     Utils::new_day(i, 24);
-    // });
     let days = [
         day1::run,
         day2::run,
@@ -36,10 +35,11 @@ fn main() {
         day12::run,
         day13::run,
         day14::run,
-        day15::run,
         day16::run, // INCOMPLETE
-        day17::run,
+        day17::run, // INCOMPLETE
         day18::run,
+        day15::run,
+        day25::run,
     ];
 
     days.into_iter().last().into_iter().for_each(|f| {
