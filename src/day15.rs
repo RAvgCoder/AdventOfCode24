@@ -255,8 +255,9 @@ impl WarehouseRobot<ObjectNormal> {
         let moves = mem::take(&mut self.moves);
         for (times, direction) in moves {
             match direction {
-                Direction::North | Direction::South => self.move_box((times, direction)),
-                Direction::East | Direction::West => self.move_box((times, direction)),
+                Direction::North | Direction::South | Direction::East | Direction::West => {
+                    self.move_box((times, direction))
+                }
                 Direction::Current => unreachable!("Invalid direction"),
             }
         }
@@ -277,33 +278,31 @@ impl WarehouseRobot<ObjectNormal> {
     }
 
     fn move_box(&mut self, (times, dir): Dir) {
-        let mut _times = times;
         let mut space_searcher = self.robot_pos + dir;
-        while _times != 0 {
-            match self.map.get(&space_searcher).unwrap() {
-                ObjectNormal::Wall => {
-                    // Can move no further
-                    break;
+        for _ in 0..times {
+            loop {
+                match self.map.get(&space_searcher).unwrap() {
+                    ObjectNormal::Wall => {
+                        // Can move no further
+                        return;
+                    }
+                    ObjectNormal::Empty => {
+                        // Move the robot and the box specially for now
+                        *self.map.get_mut(&space_searcher).unwrap() = ObjectNormal::Box;
+                        *self.map.get_mut(&self.robot_pos).unwrap() = ObjectNormal::Empty;
+                        self.robot_pos += dir;
+                        *self.map.get_mut(&self.robot_pos).unwrap() = ObjectNormal::Robot;
+                        space_searcher += dir;
+                        break;
+                    }
+                    ObjectNormal::Box => { /* Pass over */ }
+                    ObjectNormal::Robot => {
+                        unreachable!("Robot cannot be in the path iterating over")
+                    }
                 }
-                ObjectNormal::Empty => {
-                    // Move the robot and the box specially for now
-                    *self.map.get_mut(&space_searcher).unwrap() = ObjectNormal::Box;
-                    _times -= 1;
-                }
-                ObjectNormal::Box => { /* Pass over */ }
-                ObjectNormal::Robot => unreachable!("Robot cannot be in the path iterating over"),
+                space_searcher += dir;
             }
-            space_searcher += dir;
         }
-
-        let boxes_to_move = times - _times;
-        for _ in 0..boxes_to_move {
-            // Make the prev robot pos empty
-            *self.map.get_mut(&self.robot_pos).unwrap() = ObjectNormal::Empty;
-            self.robot_pos += dir;
-        }
-        // Place the robot at the new position
-        *self.map.get_mut(&self.robot_pos).unwrap() = ObjectNormal::Robot;
     }
 }
 

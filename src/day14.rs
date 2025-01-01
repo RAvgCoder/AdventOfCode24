@@ -1,7 +1,7 @@
 use aoc_utils_rust::coordinate_system::Coordinate;
 use aoc_utils_rust::day_setup::Utils;
 use aoc_utils_rust::grid::sized_grid::SizedGrid;
-use aoc_utils_rust::grid::GridMut;
+use aoc_utils_rust::grid::{Grid, GridMut};
 use aoc_utils_rust::math::Math;
 use std::str::FromStr;
 
@@ -39,7 +39,7 @@ fn part2(mut robot_simulation: RobotSimulation<101, 103>) -> u16 {
                 false,
                 Some(|e: &char| *e),
             )
-                .expect("Failed to dump grid to file");
+            .expect("Failed to dump grid to file");
             return time;
         }
     }
