@@ -75,7 +75,6 @@ fn find_shortest_path(map: &Map, the_visitor: &mut TheVisitor<TimerMap>) -> Opti
 struct CorruptedByteStream {
     corrupted_stream: Box<[Coordinate]>,
 }
-type ByteSpot = bool;
 impl CorruptedByteStream {
     fn toggle_corrupted_bytes(map: &mut Map, corrupted_stream: &[Coordinate]) {
         for coord in corrupted_stream.iter() {
