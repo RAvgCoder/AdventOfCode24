@@ -10,6 +10,7 @@ mod day17;
 mod day18;
 mod day19;
 mod day2;
+mod day22;
 mod day25;
 mod day3;
 mod day4;
@@ -41,7 +42,8 @@ fn main() {
         day25::run,
         day19::run,
         day16::run,
-        day17::run, // INCOMPLETE
+        day17::run,
+        day22::run,
     ];
 
     days.into_iter().last().into_iter().for_each(|f| {
