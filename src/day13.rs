@@ -48,7 +48,7 @@ impl Machine {
     fn minimum_tickets_dp(
         &self,
         curr_prize: (i64, i64),
-        cache: &mut HashMap<(i64, i64), i64>, // (curr_price, depth) -> min_cost
+        cache: &mut HashMap<(i64, i64), i64>, // curr_price -> min_cost
         (a, b): (i64, i64),                   // (a_steps, b_steps)
     ) -> i64 {
         if let Some(&result) = cache.get(&curr_prize) {

@@ -30,7 +30,7 @@ fn part2(mut office_plan: OfficePlan) -> usize {
 
 struct OfficePlan {
     map: UnsizedGrid<char>,
-    guard_position: Coordinate,
+    guard_position: Coordinate<isize>,
 }
 
 impl OfficePlan {
@@ -43,9 +43,9 @@ impl OfficePlan {
             .flat_map(|row| row.filter_map(|(coord, &e)| (e == 'X').then(|| coord)))
             .collect::<Vec<_>>()
         {
-            *self.map.get_mut(&point).unwrap() = '#';
+            *self.map.get_mut(&point.into()).unwrap() = '#';
             count += self.simulate() as usize;
-            *self.map.get_mut(&point).unwrap() = '.';
+            *self.map.get_mut(&point.into()).unwrap() = '.';
         }
         count
     }
@@ -122,13 +122,13 @@ impl From<Vec<String>> for OfficePlan {
                     .map(|(i, s)| {
                         let row: Vec<char> = s.chars().collect();
                         row.iter().position(|&c| c == '^').map(|j| {
-                            guard = Some(Coordinate::new(i as i32, j as i32));
+                            guard = Some(Coordinate::new(i, j));
                         });
                         row
                     })
                     .collect::<Vec<_>>(),
             ),
-            guard_position: guard.expect("No guard found"),
+            guard_position: guard.expect("No guard found").into(),
         }
     }
 }

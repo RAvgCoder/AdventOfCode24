@@ -10,7 +10,7 @@ use aoc_utils_rust::day_setup::Utils;
 pub fn run() {
     // run_part(day_func_part_to_run, part_num, day_num)
     Utils::run_part(part1, 1, 25, Some(2691));
-    // Utils::run_part(part2, 2, 25, Some("Completed AOC 2024!"));
+    Utils::run_part(part2, 2, 25, Some("Completed AOC 2024!"));
 }
 
 fn part1(input: Vec<String>) -> u32 {

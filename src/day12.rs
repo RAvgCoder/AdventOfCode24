@@ -38,13 +38,13 @@ impl Garden {
         let mut global_visited = HashSet::new();
         for i in 0..self.garden.num_rows() {
             for j in 0..self.garden.num_cols() {
-                let coord = Coordinate::new(i as i32, j as i32);
-                let e = *self.garden.get(&coord).unwrap();
+                let coord: Coordinate<usize> = Coordinate::new(i, j);
+                let e = *self.garden.get(&coord.into()).unwrap();
                 if !global_visited.contains(&coord) {
                     let perimeter = if with_size {
-                        self.calculate_price_with_sides(coord, e, &mut plot_visited)
+                        self.calculate_price_with_sides(coord.into(), e, &mut plot_visited)
                     } else {
-                        self.calculate_price(coord, e, &mut plot_visited)
+                        self.calculate_price(coord.into(), e, &mut plot_visited)
                     };
                     price += plot_visited.len() as u32 * perimeter;
                     global_visited.extend(plot_visited.drain());
@@ -56,15 +56,15 @@ impl Garden {
 
     fn calculate_price(
         &self,
-        curr: Coordinate,
+        curr: Coordinate<isize>,
         plot_searching_for: char,
-        visited: &mut HashSet<Coordinate>,
+        visited: &mut HashSet<Coordinate<usize>>,
     ) -> u32 {
         match self.garden.get(&curr) {
             None => 1,                                                // Out of bounds
             Some(curr_plot) if *curr_plot != plot_searching_for => 1, // Different plot
             Some(_) => {
-                if !visited.insert(curr) {
+                if !visited.insert(curr.into()) {
                     return 0; // Already visited
                 }
 
@@ -82,15 +82,15 @@ impl Garden {
 
     fn calculate_price_with_sides(
         &self,
-        curr: Coordinate,
+        curr: Coordinate<isize>,
         plot_searching_for: char,
-        visited: &mut HashSet<Coordinate>,
+        visited: &mut HashSet<Coordinate<usize>>,
     ) -> u32 {
         match self.garden.get(&curr) {
             None => 0,                                                // Out of bounds
             Some(curr_plot) if *curr_plot != plot_searching_for => 0, // Different plot
             Some(_) => {
-                if !visited.insert(curr) {
+                if !visited.insert(curr.into()) {
                     return 0; // Already visited
                 }
 
@@ -107,7 +107,7 @@ impl Garden {
         }
     }
 
-    fn calculate_curr_perimeter(&self, curr: Coordinate, plot_searching_for: char) -> u32 {
+    fn calculate_curr_perimeter(&self, curr: Coordinate<isize>, plot_searching_for: char) -> u32 {
         let mut perimeter = 0;
 
         const SEARCH_DIR: [[FullDirection; 3]; 4] = [
@@ -148,7 +148,7 @@ impl Garden {
         perimeter
     }
 
-    fn is_on_curr_plot(&self, coord: Coordinate, curr_plot: char) -> bool {
+    fn is_on_curr_plot(&self, coord: Coordinate<isize>, curr_plot: char) -> bool {
         match self.garden.get(&coord) {
             Some(&plot) if plot == curr_plot => true,
             _ => false,

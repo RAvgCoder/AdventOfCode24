@@ -32,8 +32,8 @@ fn part2(reindeer_maze: ReindeerMaze) -> u32 {
 
 #[derive(Debug)]
 struct ReindeerMaze {
-    start: Coordinate,
-    end: Coordinate,
+    start: Coordinate<isize>,
+    end: Coordinate<isize>,
     maze: UnsizedGrid<Objects>,
 }
 
@@ -41,18 +41,18 @@ struct ReindeerMaze {
 struct Location {
     cost: u32,
     direction: Direction,
-    curr_coord: Coordinate,
+    curr_coord: Coordinate<isize>,
     graph_ptr: StaticNodePtr,
 }
 
 impl Location {
-    fn key(&self) -> (Coordinate, Direction) {
+    fn key(&self) -> (Coordinate<isize>, Direction) {
         (self.curr_coord, self.direction)
     }
 
     fn next(
         &self,
-        graph: &mut StaticGraph<Coordinate, ()>,
+        graph: &mut StaticGraph<Coordinate<isize>, ()>,
         grid: &UnsizedGrid<Objects>,
         min_cost: u32,
     ) -> Vec<Location> {
@@ -128,7 +128,7 @@ impl ReindeerMaze {
 
         fn count_visited(
             end_ptr: StaticNodePtr,
-            graph: &StaticGraph<Coordinate, ()>,
+            graph: &StaticGraph<Coordinate<isize>, ()>,
             unsized_grid: &UnsizedGrid<Objects>,
         ) -> u32 {
             #[cfg(debug_assertions)]
@@ -141,7 +141,7 @@ impl ReindeerMaze {
                     .collect::<HashSet<_>>();
                 dump_grid_to_file(
                     &UnsizedGrid::transform_from(unsized_grid, |(coord, obj)| {
-                        if x.contains(&coord) {
+                        if x.contains(&coord.into()) {
                             return 'O';
                         }
                         match obj {
@@ -290,22 +290,22 @@ impl From<Vec<String>> for ReindeerMaze {
                     '#' => Objects::Wall,
                     '.' | 'O' | 'v' | '>' | '^' | '<' => Objects::Path,
                     'S' => {
-                        start = Some(Coordinate::new(i as i32, j as i32));
+                        start = Some(Coordinate::new(i, j));
                         Objects::Start
                     }
                     'E' => {
-                        end = Some(Coordinate::new(i as i32, j as i32));
+                        end = Some(Coordinate::new(i, j));
                         Objects::End
                     }
                     _ => panic!("Invalid character in maze `{e}`"),
                 };
-                *maze.get_mut(&Coordinate::new(i as i32, j as i32)).unwrap() = obj;
+                *maze.get_mut(&Coordinate::new(i, j).into()).unwrap() = obj;
             }
         }
         Self {
             maze,
-            end: end.unwrap(),
-            start: start.unwrap(),
+            end: end.unwrap().into(),
+            start: start.unwrap().into(),
         }
     }
 }

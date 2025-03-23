@@ -35,7 +35,7 @@ fn part1(corruption_byte_stream: CorruptedByteStream) -> u32 {
     find_shortest_path(&mut map, &mut the_visitor).expect("I'm guaranteed to find a path")
 }
 
-fn part2(mut corruption_byte_stream: CorruptedByteStream) -> (i32, i32) {
+fn part2(mut corruption_byte_stream: CorruptedByteStream) -> (isize, isize) {
     // Flip the coordinates for some reason 🤷‍♂️ (I'm not sure why he flipped the coordinates for part 2)
     corruption_byte_stream
         .corrupted_stream
@@ -52,11 +52,12 @@ fn part2(mut corruption_byte_stream: CorruptedByteStream) -> (i32, i32) {
 fn find_shortest_path(map: &Map, the_visitor: &mut TheVisitor<TimerMap>) -> Option<u32> {
     let end_coord = map.bottom_right_coordinate();
     let mut queue = VecDeque::with_capacity(map.num_cols());
-    queue.push_back((Coordinate::ORIGIN, 0));
+    queue.push_back((Coordinate::<isize>::ORIGIN, 0));
     while let Some((next_coord, steps)) = queue.pop_front() {
-        if next_coord == end_coord {
+        if next_coord == end_coord.into() {
             return Some(steps);
         }
+        let next_coord = next_coord;
         if the_visitor.mark_visited(next_coord) {
             Direction::direction_list()
                 .map(|dir| next_coord + dir)
@@ -73,16 +74,16 @@ fn find_shortest_path(map: &Map, the_visitor: &mut TheVisitor<TimerMap>) -> Opti
 
 #[derive(Debug)]
 struct CorruptedByteStream {
-    corrupted_stream: Box<[Coordinate]>,
+    corrupted_stream: Box<[Coordinate<isize>]>,
 }
 impl CorruptedByteStream {
-    fn toggle_corrupted_bytes(map: &mut Map, corrupted_stream: &[Coordinate]) {
+    fn toggle_corrupted_bytes(map: &mut Map, corrupted_stream: &[Coordinate<isize>]) {
         for coord in corrupted_stream.iter() {
             *map.get_mut(coord).unwrap() ^= true;
         }
     }
 
-    fn find_max_corrupted_bytes_to_escape(&self) -> Coordinate {
+    fn find_max_corrupted_bytes_to_escape(&self) -> Coordinate<isize> {
         let mut map = SizedGrid::<bool, GRID_SIZE, GRID_SIZE>::new(true);
         let mut the_visitor = {
             let backing_grid = SizedGrid::with_size_from(&map, Timer::BLANK);
@@ -119,7 +120,7 @@ impl CorruptedByteStream {
             the_visitor.clear();
         }
 
-        result.unwrap()
+        result.unwrap().into()
     }
 }
 

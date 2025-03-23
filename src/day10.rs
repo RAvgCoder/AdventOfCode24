@@ -3,6 +3,7 @@ use aoc_utils_rust::coordinate_system::Coordinate;
 use aoc_utils_rust::day_setup::Utils;
 use aoc_utils_rust::grid::unsized_grid::UnsizedGrid;
 use aoc_utils_rust::grid::{Grid, GridMut};
+use aoc_utils_rust::{to_signed_coordinate, to_unsigned_coordinate};
 use std::collections::{HashSet, VecDeque};
 
 /// Runs the Advent of Code puzzles for [Current Day](https://adventofcode.com/2024/day/10).
@@ -34,7 +35,7 @@ struct TopographicMap {
 impl TopographicMap {
     fn count_rating(&self) -> u16 {
         fn dfs_rating(
-            curr: Coordinate,
+            curr: Coordinate<isize>,
             map: &UnsizedGrid<u8>,
             visited: &mut [bool; 9],
             queue: &mut VecDeque<Coordinate>,
@@ -77,14 +78,21 @@ impl TopographicMap {
             .iter()
             .flatten()
             .filter(|(_, &e)| e == 0)
-            .map(|(coord, _)| dfs_rating(coord, &self.map, &mut [false; 9], &mut VecDeque::new()))
+            .map(|(coord, _)| {
+                dfs_rating(
+                    Coordinate::new(coord.i as isize, coord.j as isize),
+                    &self.map,
+                    &mut [false; 9],
+                    &mut VecDeque::new(),
+                )
+            })
             .sum()
     }
 
     fn count_trail_heads(&self) -> u16 {
         let mut trail_heads = 0;
         let map = &self.map;
-        let mut visited: HashSet<Coordinate> =
+        let mut visited: HashSet<Coordinate<usize>> =
             HashSet::with_capacity(self.map.num_cols() * self.map.num_rows());
         let mut queue = VecDeque::new();
         for row in self.map.iter() {
@@ -96,6 +104,7 @@ impl TopographicMap {
                             continue;
                         }
 
+                        let cord = to_signed_coordinate!(cord);
                         let curr_num = *map.get(&cord).unwrap();
                         if curr_num == 9 {
                             trail_heads += 1;
@@ -107,7 +116,9 @@ impl TopographicMap {
                             .into_iter()
                             .filter(|c| map.is_valid_coordinate(c))
                             .filter(|cord| curr_num + 1 == *map.get(cord).unwrap())
-                            .for_each(|next| queue.push_back(next))
+                            // Coord SAFETY Cast: The Coord is guaranteed to be within the bounds of the map
+                            // because of the filter above so it is safe to cast it to an unsigned coordinate
+                            .for_each(|next| queue.push_back(to_unsigned_coordinate!(next)))
                     }
                     queue.clear();
                     visited.clear();
@@ -125,8 +136,8 @@ impl From<Vec<String>> for TopographicMap {
         let mut map = UnsizedGrid::new(row, col, 0);
         for (i, row) in value.iter().enumerate() {
             for (j, e) in row.chars().enumerate() {
-                *map.get_mut(&Coordinate::new(i as i32, j as i32)).unwrap() =
-                    e.to_digit(10).unwrap() as _
+                *map.get_mut(&to_signed_coordinate!(Coordinate::new(i, j)))
+                    .unwrap() = e.to_digit(10).unwrap() as _
             }
         }
         Self { map }

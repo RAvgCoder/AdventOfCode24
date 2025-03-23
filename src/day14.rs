@@ -3,6 +3,7 @@ use aoc_utils_rust::day_setup::Utils;
 use aoc_utils_rust::grid::sized_grid::SizedGrid;
 use aoc_utils_rust::grid::{Grid, GridMut};
 use aoc_utils_rust::math::Math;
+use aoc_utils_rust::to_signed_coordinate;
 use std::str::FromStr;
 
 /// Runs the Advent of Code puzzles for [Current Day](https://adventofcode.com/2024/day/14).
@@ -48,8 +49,8 @@ fn part2(mut robot_simulation: RobotSimulation<101, 103>) -> u16 {
 
 #[derive(Debug)]
 struct Robot {
-    pos: Coordinate,
-    velocity: Coordinate,
+    pos: Coordinate<i32>,
+    velocity: Coordinate<i32>,
 }
 
 impl Robot {
@@ -78,7 +79,9 @@ impl<const WIDE: u32, const TALL: u32> RobotSimulation<WIDE, TALL> {
         }
 
         for robot in self.robot.iter() {
-            *grid.get_mut(&robot.pos.transpose()).unwrap() = '#';
+            *grid
+                .get_mut(&to_signed_coordinate!(robot.pos.transpose()))
+                .unwrap() = '#';
         }
 
         for row in grid.iter() {

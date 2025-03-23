@@ -11,6 +11,7 @@ mod day18;
 mod day19;
 mod day2;
 mod day22;
+mod day24;
 mod day25;
 mod day3;
 mod day4;
@@ -37,16 +38,17 @@ fn main() {
         day12::run,
         day13::run,
         day14::run,
-        day18::run,
         day15::run,
         day25::run,
         day19::run,
         day16::run,
         day17::run,
         day22::run,
+        day24::run,
+        day18::run,
     ];
 
-    days.into_iter().last().into_iter().for_each(|f| {
+    days.into_iter().for_each(|f| {
         f();
         println!()
     });

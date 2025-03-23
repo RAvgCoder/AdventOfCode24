@@ -33,12 +33,12 @@ fn part2(mut warehouse_robot: WarehouseRobot<ObjectMalfunctioning>) -> u32 {
 type Dir = (u8, Direction);
 #[derive(Debug)]
 struct WarehouseRobot<T> {
-    robot_pos: Coordinate,
+    robot_pos: Coordinate<isize>,
     map: UnsizedGrid<T>,
     moves: Vec<Dir>,
 }
 
-type BoxPair = (Coordinate, Coordinate);
+type BoxPair = (Coordinate<isize>, Coordinate<isize>);
 impl WarehouseRobot<ObjectMalfunctioning> {
     fn start_simulation(&mut self) {
         // Appease the borrow checker gods by moving the moves 🕺 out of the struct
@@ -121,8 +121,8 @@ impl WarehouseRobot<ObjectMalfunctioning> {
     fn can_move_vertically(
         &self,
         dir: Direction,
-        box_part: Coordinate,
-        visited: &mut HashSet<Coordinate>,
+        box_part: Coordinate<isize>,
+        visited: &mut HashSet<Coordinate<isize>>,
     ) -> bool {
         if !visited.insert(box_part) {
             return true;
@@ -150,9 +150,9 @@ impl WarehouseRobot<ObjectMalfunctioning> {
     fn recursively_move_vertically(
         &mut self,
         dir: Direction,
-        box_part: Coordinate,
+        box_part: Coordinate<isize>,
         part: ObjectMalfunctioning,
-        visited: &mut HashSet<Coordinate>,
+        visited: &mut HashSet<Coordinate<isize>>,
     ) {
         if !visited.insert(box_part) {
             return;
@@ -407,7 +407,7 @@ impl From<Vec<String>> for WarehouseRobot<ObjectMalfunctioning> {
         for (i, row) in map.into_iter().enumerate() {
             let mut j = 0;
             for c in row.chars() {
-                let coord = Coordinate::new(i as i32, j);
+                let coord = Coordinate::new(i, j);
                 match c {
                     '@' => {
                         if robot_pos.is_some() {
@@ -415,8 +415,13 @@ impl From<Vec<String>> for WarehouseRobot<ObjectMalfunctioning> {
                         }
                         robot_pos = Some(coord);
                         // @.
-                        *grid.get_mut(&coord).unwrap() = ObjectMalfunctioning::Robot;
-                        *grid.get_mut(&(coord + next)).unwrap() = ObjectMalfunctioning::Empty;
+                        *grid.get_mut(&coord.into()).unwrap() = ObjectMalfunctioning::Robot;
+                        *grid
+                            .get_mut(
+                                &(<Coordinate<usize> as Into<Coordinate<isize>>>::into(coord)
+                                    + next),
+                            )
+                            .unwrap() = ObjectMalfunctioning::Empty;
                     }
                     c => {
                         let new = match c {
@@ -428,8 +433,13 @@ impl From<Vec<String>> for WarehouseRobot<ObjectMalfunctioning> {
                             ],
                             _ => unreachable!(),
                         };
-                        *grid.get_mut(&coord).unwrap() = new[0];
-                        *grid.get_mut(&(coord + next)).unwrap() = new[1];
+                        *grid.get_mut(&coord.into()).unwrap() = new[0];
+                        *grid
+                            .get_mut(
+                                &(<Coordinate<usize> as Into<Coordinate<isize>>>::into(coord)
+                                    + next),
+                            )
+                            .unwrap() = new[1];
                     }
                 }
                 j += 2;
@@ -438,7 +448,7 @@ impl From<Vec<String>> for WarehouseRobot<ObjectMalfunctioning> {
 
         Self {
             map: grid,
-            robot_pos: robot_pos.unwrap(),
+            robot_pos: robot_pos.unwrap().into(),
             moves,
         }
     }
@@ -452,7 +462,7 @@ impl From<Vec<String>> for WarehouseRobot<ObjectNormal> {
         let mut robot_pos = None;
         for (i, e) in map.into_iter().enumerate() {
             for (j, c) in e.chars().enumerate() {
-                let coord = Coordinate::new(i as i32, j as i32);
+                let coord = Coordinate::new(i as isize, j as isize);
                 match c {
                     '@' => {
                         if robot_pos.is_some() {
